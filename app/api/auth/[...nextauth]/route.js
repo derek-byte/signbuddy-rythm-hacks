@@ -9,8 +9,9 @@ const handler = NextAuth({
             name: 'credentials',
             credentials: {},
             async authorize(credentials, req) {
-                console.log("HERE")
-                const {email, password} = credentials;
+                const email = credentials?.email?.trim().toLowerCase();
+                const password = credentials?.password;
+                if (!email || !password) return null;
                 await startDb();
 
                 const user = await UserModel.findOne({ email });

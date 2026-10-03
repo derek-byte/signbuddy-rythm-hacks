@@ -1,15 +1,12 @@
 "use client"
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useSession } from "next-auth/react";
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
-    const {data, status} = useSession();
-    console.log("DATA", data)
-    const isAuth = status === "authenticated";
-
+    const {data} = useSession();
     const router = useRouter();
 
     const handleLogout = () => {

@@ -3,24 +3,17 @@
 import React, { useRef, useState, useEffect } from "react";
 import * as tf from "@tensorflow/tfjs";
 import Webcam from "react-webcam";
-import { nextFrame } from "@tensorflow/tfjs";
 import {drawRect} from "./utilities"; 
 
 function SignLanguage() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
+  const [error, setError] = useState("");
 
   // Main function
   const runCoco = async () => {
-    // 3. TODO - Load network 
-    // e.g. const net = await cocossd.load();
-    // https://tensorflowjsrealtimemodel.s3.au-syd.cloud-object-storage.appdomain.cloud/model.json
-    const net = await tf.loadGraphModel('https://tensorflowjsrealtimemodel.s3.au-syd.cloud-object-storage.appdomain.cloud/model.json')
-    
-    //  Loop and detect hands
-    setInterval(() => {
-      detect(net);
-    }, 16.7);
+    const net = await tf.loadGraphModel('/model/model.json');
+    return net;
   };
 
   const detect = async (net) => {
@@ -49,8 +42,6 @@ function SignLanguage() {
       const casted = resized.cast('int32')
       const expanded = casted.expandDims(0)
       const obj = await net.executeAsync(expanded)
-      console.log(obj)
-
       const boxes = await obj[1].array()
       const classes = await obj[2].array()
       const scores = await obj[4].array()
@@ -71,10 +62,36 @@ function SignLanguage() {
     }
   };
 
-  useEffect(()=>{runCoco()},[]);
+  useEffect(() => {
+    let stopped = false;
+    let frame;
+    let net;
+
+    const run = async () => {
+      try {
+        net = await runCoco();
+        const loop = async () => {
+          await detect(net);
+          if (!stopped) frame = requestAnimationFrame(loop);
+        };
+        loop();
+      } catch (e) {
+        setError("The sign detector could not start. Please refresh and allow camera access.");
+        console.error(e);
+      }
+    };
+
+    run();
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(frame);
+      net?.dispose();
+    };
+  }, []);
 
   return (
     <div className="h-screen">
+      {error ? <p className="p-4 text-center text-red-600">{error}</p> : null}
       <header className="App-header">
         <Webcam
           ref={webcamRef}
@@ -86,7 +103,7 @@ function SignLanguage() {
             left: 0,
             right: 0,
             textAlign: "center",
-            zindex: 9,
+            zIndex: 9,
             width: 640,
             height: 480,
           }}
@@ -101,7 +118,7 @@ function SignLanguage() {
             left: 0,
             right: 0,
             textAlign: "center",
-            zindex: 8,
+            zIndex: 10,
             width: 640,
             height: 480,
           }}

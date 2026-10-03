@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 
 const SignUp = () => {
     const [busy, setBusy] = useState(false);
+    const [message, setMessage] = useState("");
     const [userInfo, setUserInfo] = useState({
         name: "",
         email: "",
@@ -19,18 +20,26 @@ const SignUp = () => {
     const handleSubmit = async (e) => {
         setBusy(true);
         e.preventDefault();
-        const res = await fetch("api/auth/users", {
-            method: "POST",
-            body: JSON.stringify(userInfo)
-        })
-        console.log(res);
-        setBusy(false);
+        try {
+            const res = await fetch("/api/auth/users", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(userInfo)
+            })
+            const data = await res.json();
+            setMessage(res.ok ? "Account created. You can now log in." : data.error);
+        } catch {
+            setMessage("Registration is temporarily unavailable. Please try again.");
+        } finally {
+            setBusy(false);
+        }
     };
 
     return (
         <div className="flex items-center">
             <div className="py-2 rounded w-96">
             <h2 className="text-2xl font-semibold mb-6">Register</h2>
+            {message ? <p className="mb-4">{message}</p> : null}
             <form>
                 <div className="mb-4">
                 <label className="block text-gray-600 font-semibold">Name</label>
@@ -60,6 +69,7 @@ const SignUp = () => {
                 <label className="block text-gray-600 font-semibold">Password</label>
                 <input
                     type="password"
+                    minLength={8}
                     className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
                     placeholder="Your Password"
                     label="Password"

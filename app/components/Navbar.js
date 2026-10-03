@@ -5,8 +5,8 @@ import { useSession } from "next-auth/react";
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
-const Navbar = ({ user, onLogout }) => {
-    const {data, status} = useSession();
+const Navbar = () => {
+    const {status} = useSession();
     const isAuth = status === "authenticated";
     const router = useRouter();
 
@@ -17,14 +17,14 @@ const Navbar = ({ user, onLogout }) => {
         {isAuth ? (
           <button
             className="text-white bg-red-500 px-4 py-2 rounded hover:bg-red-600"
-            onClick={onLogout}
+            onClick={() => signOut({ callbackUrl: "/" })}
           >
             Logout
           </button>
         ) : (
             <button
                 className="text-white bg-slate-500 px-4 py-2 rounded hover:bg-slate-600"
-                // onClick={onLogout}
+                onClick={() => router.replace("/")}
             >
                 Login
             </button>
